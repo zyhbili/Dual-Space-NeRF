@@ -1,9 +1,11 @@
 # Dual-Space NeRF
-[3DV-2022] The official repo for the  paper "Dual-Space NeRF: Learning Animatable Avatars and Scene Lighting in Separate Spaces".[[paper](https://arxiv.org/abs/2208.14851) / [video](https://youtu.be/2qk4WOO8YMw)]
+[3DV-2022] The official repo for the  paper "Dual-Space NeRF: Learning Animatable Avatars and Scene Lighting in Separate Spaces".
+
+[[paper](https://arxiv.org/abs/2208.14851) / [video](https://youtu.be/2qk4WOO8YMw)]
 
 Coming soon ...
 
-![](demo/ours_313.gif)
+![](demo/demo.gif)
 
 ```
 @misc{zhi2022dualspace,
