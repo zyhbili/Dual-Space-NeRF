@@ -1,0 +1,54 @@
+
+MODEL:
+  TYPE: "nerf"     #"nerf" or "nerfW"
+  COARSE_RAY_SAMPLING: 64
+  FINE_RAY_SAMPLING: -1
+  SAMPLE_METHOD: "NEAR_FAR"       #  "NEAR_FAR" 
+  BOARDER_WEIGHT: 1e10
+  SAME_SPACENET: False
+  sample_points_mode : "GG"
+  
+  TKERNEL_INC_RAW: True
+  POSE_REFINEMENT: False # If doing the camera pose refinement
+  
+  USE_DIR: True
+ 
+  LOSS: 'L2' # 'L1' or 'L2'
+  LOSSwMask: False
+
+
+
+DATASETS:
+  TYPE: "h36m" # 'syn'
+  HUMAN: "S7"
+DATALOADER:
+  NUM_WORKERS: 3
+
+SOLVER:
+  OPTIMIZER_NAME: "Adam"
+
+  MAX_EPOCHS: 1000
+
+  BASE_LR: 0.0005 # learning rate
+
+  WEIGHT_DECAY: 0.0000000
+  
+  START_ITERS: 3000
+  END_ITERS: 60000
+  LR_SCALE: 0.09
+  WARMUP_ITERS: 1000
+
+  CHECKPOINT_PERIOD: 3000
+  TEST_PERIOD: 1000
+  LOG_PERIOD: 10
+  BUNCH: 3000
+  COARSE_STAGE: 1
+
+  IMS_PER_BATCH: 2048 # batch size
+
+
+TEST:
+  IMS_PER_BATCH: 1
+  light_center: [-0.28182483, 0.4928853, 1.0900146 ]
+
+OUTPUT_DIR: "/p300/MultiView/cvpr2021/output"

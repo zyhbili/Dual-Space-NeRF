@@ -1,0 +1,18 @@
+Train:
+  views: [0, 6, 12, 18]
+  ratio: 0.5
+  begin: 0
+  end: 399
+
+Val:
+  ratio: 0.5
+  begin: 500
+  end: 1400
+  intv: 500
+
+Test:
+  ratio: 0.5
+  begin: 0
+  end: 1400
+  intv: 30
+  novel_pose_begin: 400
