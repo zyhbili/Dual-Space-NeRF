@@ -45,15 +45,14 @@ python3 test.py -c configs/zju_mocap/313.yml --ckpt [ckpt_path.pth] --exp 313
 ```
 More visualization code is coming soon...
 
-
+## Cite
 ```
-@misc{zhi2022dualspace,
-      title={Dual-Space NeRF: Learning Animatable Avatars and Scene Lighting in Separate Spaces}, 
-      author={Yihao Zhi and Shenhan Qian and Xinhao Yan and Shenghua Gao},
-      year={2022},
-      eprint={2208.14851},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{zhi2022dual,
+  title={Dual-Space NeRF: Learning Animatable Avatars and Scene Lighting in Separate Spaces},
+  author={Zhi, Yihao and Qian, Shenhan and Yan, Xinhao and Gao, Shenghua},
+  booktitle = {International Conference on 3D Vision (3DV)},
+  month = sep,
+  year = {2022},
 }
 ```
 
