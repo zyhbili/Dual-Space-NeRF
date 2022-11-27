@@ -20,10 +20,10 @@ class Mocap_Base(Dataset):
         
         use_x_pose = True
         self.use_x_pose = use_x_pose
-        if use_x_pose:
-            self.joints = np.load(os.path.join(data_root, "X_smpl_joints.npy"))[0]
-        else:  ##T_pose
-            self.joints = np.load(os.path.join(data_root, "T_smpl_joints.npy"))[0]
+        # if use_x_pose:
+        #     self.joints = np.load(os.path.join(data_root, "X_smpl_joints.npy"))[0]
+        # else:  ##T_pose
+        #     self.joints = np.load(os.path.join(data_root, "T_smpl_joints.npy"))[0]
 
         # self.gender = "neutral"
         # self.smpl = smpl_utils.load_bodydata(gender=self.gender)
