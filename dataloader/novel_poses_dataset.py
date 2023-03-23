@@ -4,19 +4,18 @@ import numpy as np
 import json
 import os
 import imageio
-import cv2
-import sys 
-sys.path.append("..")
+import cv2, yaml
+from torch.utils.data import dataset
 from utils import h36m_utils
 import torch
+from utils.data_utils import MyCfg, set_my_cfg
 # from plyfile import PlyData
 
 
 
-
-class H36M_test(data.Dataset):
-    def __init__(self, cfg, data_root, human, ann_file, split, nrays =2000, test_novel_pose=False, is_eval = False, is_formal = True):
-        super(H36M_test, self).__init__()
+class H36M_novel_poses(data.Dataset):
+    def __init__(self, cfg, data_root, human, ann_file, split, nrays =2000, test_novel_pose=False, is_eval = False, performer = "CoreView_377", zju_data_dir = '', h36m_data_dir = ''):
+        super(H36M_novel_poses, self).__init__()
         self.cfg = cfg
         self.test_novel_pose = test_novel_pose
         self.data_root = data_root
@@ -39,39 +38,29 @@ class H36M_test(data.Dataset):
 
         i = cfg.begin_ith_frame
         i_intv = cfg.frame_interval
-        ni = cfg.num_train_frame
+        ni =1000
         self.i_intv = i_intv
-        if test_novel_pose:
-            i = cfg.begin_ith_frame + cfg.num_train_frame * i_intv
-            if is_formal:
-                ni = cfg.num_eval_frame
-            else:
-                ni = cfg.my_num_eval_frame
+        
         self.ims = np.array([
             np.array(ims_data['ims'])[view]
-            for ims_data in annots['ims'][i:i + ni * i_intv][::30]
+            for ims_data in annots['ims'][i:i + ni * i_intv][::i_intv]
         ]).ravel()
         self.cam_inds = np.array([
             np.arange(len(ims_data['ims']))[view]
             for ims_data in annots['ims'][i:i + ni * i_intv][::i_intv]
         ]).ravel()
+
         self.num_cams = len(view)
-
         self.lbs_root = os.path.join(self.data_root, 'lbs')
-
-        use_x_pose = True
-        # if use_x_pose:
-        #     joints = np.load(os.path.join(self.lbs_root, 'X_smpl_joints.npy'))[0]
-        # else:
-        #     joints = np.load(os.path.join(self.lbs_root, 'joints.npy'))
-        self.joints = joints.astype(np.float32)
+        
         self.parents = np.load(os.path.join(self.lbs_root, 'parents.npy'))
         self.nrays = nrays
+        self.performer_dir = os.path.join(zju_data_dir, performer)
 
+        # self.vertices_path = f"group/projects/smpl_nerf/novel_poses/{human}/new_vertices"
         self.canonical_vertex = torch.from_numpy(
-            np.load(os.path.join(self.data_root, 'lbs', "X_smpl_vertices.npy"))
+            np.load(os.path.join(self.performer_dir, "X_smpl_vertices.npy"))
         ).squeeze()
-
     def get_mask(self, index):
         msk_path = os.path.join(self.data_root, 'mask_cihp',
                                 self.ims[index])[:-4] + '.png'
@@ -97,9 +86,11 @@ class H36M_test(data.Dataset):
 
     def prepare_input(self, i):
         # read xyz in the world coordinate system
+        # vertices_path = os.path.join(self.vertices_path,
+        #                              '{}.npy'.format(i))
         vertices_path = os.path.join(self.data_root, self.cfg.vertices,
-                                     '{}.npy'.format(i))
-        wxyz = np.load(vertices_path).astype(np.float32)
+                                '{}.npy'.format(i))
+        wxyz = np.load(vertices_path).astype(np.float32).squeeze()
 
         # transform smpl from the world coordinate to the smpl coordinate
         params_path = os.path.join(self.data_root, self.cfg.params,
@@ -114,14 +105,14 @@ class H36M_test(data.Dataset):
 
         # calculate the skeleton transformation
         poses = params['poses'].reshape(-1, 3)
-        joints = self.joints
-        parents = self.parents
-        A = h36m_utils.get_rigid_transformation(poses, joints, parents)
+        # joints = self.joints
+        # parents = self.parents
+        # A = h36m_utils.get_rigid_transformation(poses, joints, parents)
 
-        pbw = np.load(os.path.join(self.lbs_root, 'bweights/{}.npy'.format(i)))
-        pbw = pbw.astype(np.float32)
+        # pbw = np.load(os.path.join(self.lbs_root, 'bweights/{}.npy'.format(i)))
+        # pbw = pbw.astype(np.float32)
 
-        return wxyz, pxyz, A, pbw, R, Th, poses
+        return wxyz, pxyz, 0, 0, R, Th, poses
 
     def __getitem__(self, index):
         img_path = os.path.join(self.data_root, self.ims[index])
@@ -149,6 +140,7 @@ class H36M_test(data.Dataset):
         msk = cv2.resize(msk, (W, H), interpolation=cv2.INTER_NEAREST)
         orig_msk = cv2.resize(orig_msk, (W, H),
                               interpolation=cv2.INTER_NEAREST)
+
         
         img[orig_msk == 0] = 0
 
@@ -175,11 +167,8 @@ class H36M_test(data.Dataset):
         pbounds = h36m_utils.get_bounds(ppts)
         wbounds = h36m_utils.get_bounds(wpts)
 
-        border = 10
-        kernel = np.ones((border, border), np.uint8)
-        msk_cihp_eroded = cv2.erode(msk_cihp.copy(), kernel)
         rgb, ray_o, ray_d, near, far, coord, mask_at_box = h36m_utils.sample_ray_h36m(
-            img,  msk, msk_cihp_eroded,K, R, T, wbounds, self.nrays, self.split)
+            img, msk, msk_cihp, K, R, T, wbounds, self.nrays, self.split)
 
         orig_msk = h36m_utils.crop_mask_edge(orig_msk)
         msk_tmp = (orig_msk!=0).astype(np.uint8)
@@ -231,8 +220,8 @@ class H36M_test(data.Dataset):
             'frame': frame_index//self.i_intv
         }
 
-        if self.test_novel_pose:
-            meta['frame'] = torch.randint(0, self.cfg.num_train_frame, [1])[0]
+        # if self.test_novel_pose:
+        #     meta['frame'] = torch.randint(0, self.cfg.num_train_frame, [1])[0]
         ret.update(meta)
 
         return ret
@@ -241,5 +230,26 @@ class H36M_test(data.Dataset):
         return len(self.ims)
 
 
+def get_novel_pose_dataset(performer, motion_seq, zju_data_dir, h36m_data_dir):
+
+    yaml_path = f"data_configs/novel_poses/{performer}_{motion_seq}.yml"
+    with open(yaml_path, "r", encoding="utf-8") as f:
+        cont = f.read()
+    data_config = yaml.load(cont)
+    mycfg = MyCfg()
+    mycfg = set_my_cfg(mycfg, data_config)
+    data_root = f"{h36m_data_dir}/{motion_seq}/Posing"
+    ann_file = f"{h36m_data_dir}/{motion_seq}/Posing/annots.npy"
+    # import pdb;pdb.set_trace()
+    novel_pose_set = H36M_novel_poses(mycfg, data_root, motion_seq, ann_file, "test", nrays = 2000, test_novel_pose=True, is_eval=True, performer = performer,
+                                      zju_data_dir = zju_data_dir, h36m_data_dir = h36m_data_dir)
+
+    return novel_pose_set
+
 if __name__=="__main__":
-    pass
+    novel_pose_dataset = get_novel_pose_dataset(performer="CoreView_313", motion_seq="S9")
+    novel_pose_dataset = get_novel_pose_dataset(performer="CoreView_377", motion_seq="S9")
+    print('length:',len(novel_pose_dataset))
+    dataloader = data.DataLoader(novel_pose_dataset, 1, False)
+    for batch_idx, batch in  enumerate(dataloader):
+        print(batch['frame'])

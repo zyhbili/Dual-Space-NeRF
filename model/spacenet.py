@@ -260,7 +260,7 @@ class DualSpaceNeRF(nn.Module):
         if self.light_center is not None:
             xyz_tmp = batch_info["Th"][0].cuda()
             xyz_bias = self.light_center - torch.mean(xyz_tmp, axis=0)
-            xyz_world[:, :2] += xyz_bias[:2]
+            xyz_world[:, :3] += xyz_bias[:3]
 
         color = self.lighting_mlp(normal_world, xyz_world, view_dir_world, essence)
         return color, density, None

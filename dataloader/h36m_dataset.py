@@ -60,10 +60,10 @@ class H36M(data.Dataset):
         self.lbs_root = os.path.join(self.data_root, 'lbs')
 
         use_x_pose = True
-        if use_x_pose:
-            joints = np.load(os.path.join(self.lbs_root, 'X_smpl_joints.npy'))[0]
-        else:
-            joints = np.load(os.path.join(self.lbs_root, 'joints.npy'))
+        # if use_x_pose:
+        #     joints = np.load(os.path.join(self.lbs_root, 'X_smpl_joints.npy'))[0]
+        # else:
+        #     joints = np.load(os.path.join(self.lbs_root, 'joints.npy'))
         self.joints = joints.astype(np.float32)
         self.parents = np.load(os.path.join(self.lbs_root, 'parents.npy'))
         self.nrays = nrays

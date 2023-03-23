@@ -5,6 +5,11 @@
 
 
 ![](demo/demo.gif)
+
+## Model
+We provide all checkpoints and ``X_smpl_vertices`` at [here](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/zhiyh_shanghaitech_edu_cn/EnY3wUVqJtJEpusUjfG-u3UBttBNvKUP9Xh_AqG-cJ7G1w?e=5Ub4rN).
+
+
 ## Installation
 
 1. Clone this repository:
@@ -43,7 +48,21 @@ Test Dual Space NeRF
 ```
 python3 test.py -c configs/zju_mocap/313.yml --ckpt [ckpt_path.pth] --exp 313
 ```
-More visualization code is coming soon...
+### Novel pose synthesis
+Download [CoreView_313_op3.zip](https://shanghaitecheducn-my.sharepoint.com/:f:/g/personal/zhiyh_shanghaitech_edu_cn/EnY3wUVqJtJEpusUjfG-u3UBttBNvKUP9Xh_AqG-cJ7G1w?e=5Ub4rN), and unzip it into ``novelpose_examples\``
+```
+python3 novel_pose_vis.py -c configs/zju_mocap/313.yml --ckpt ckpt/313/model_epoch_0000200.pth --exp 313_op3
+```
+The results are saved into ``motion_transfer/313_op3/`` 
+
+For customed pose seq, you need to prepare the SMPL vertices as provided in the ZIP file and then modify the `novel_pose_dataset.vertices_dir` in `novel_pose_vis.py`
+
+### Lighting MLP visualization
+```
+python3 vis_lighting.py -c configs/zju_mocap/313.yml --ckpt ckpt/313/model_epoch_0000200.pth --exp 313_lighting
+```
+The results are saved into ``lighting_vis/313_lighting/``
+
 
 ## Cite
 ```
